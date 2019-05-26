@@ -42,11 +42,15 @@ public class Tree<T> {
     public int getChildCount() {
         return mChildren.size();
     }
-
     public Tree<T> getChildAt(int index) {
         return mChildren.get(index);
     }
-
+    public List<Tree<T>> getChildren(){
+        return mChildren;
+    }
+    public void setParent(Tree<T> mParent) {
+        this.mParent = mParent;
+    }
     public Tree<T> getParent() {
         return mParent;
     }
