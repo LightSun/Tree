@@ -2,8 +2,8 @@ package com.heaven7.java.tree;
 
 /*
 取名字：
-      1，五行
-      2， 字意-- wait
+      1，五行 Wuxing.java
+      2，字意-- wait
       3，声母，韵母，音调。 Pinyin4j
       4, 结构() -- wait
       5, 建筑美  -- wait
@@ -14,7 +14,6 @@ package com.heaven7.java.tree;
 
      忌讳：
         意思偏好： http://www.sohu.com/a/212424204_99934817
-
 
  */
 public class MakeName {
