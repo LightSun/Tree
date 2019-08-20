@@ -1,10 +1,151 @@
 package com.heaven7.java.tree;
 
+import com.heaven7.java.base.util.SparseArrayDelegate;
+import com.heaven7.java.base.util.SparseFactory;
+import com.heaven7.java.tree.util.PinyinUtils;
+import com.heaven7.java.visitor.ResultVisitor;
+import com.heaven7.java.visitor.collection.VisitServices;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 汉字的五行
  */
-public class Wuxing {
+public final class Wuxing {
 
+    public static final int MARK_GLOD  = 1;
+    public static final int MARK_WOOD  = 2;
+    public static final int MARK_WATER = 3;
+    public static final int MARK_FIRE  = 4;
+    public static final int MARK_EARTH = 5;
+
+    public static class Def{
+        public int bihuaCount;
+        public int mark;
+        public String word;
+
+        public Def(int bihuaCount, int mark, String word) {
+            this.bihuaCount = bihuaCount;
+            this.mark = mark;
+            this.word = word;
+        }
+    }
+
+    private static final SparseArrayDelegate<List<Def>> sGlodWords;
+    private static final SparseArrayDelegate<List<Def>> sWoodWords;
+    private static final SparseArrayDelegate<List<Def>> sWaterWords;
+    private static final SparseArrayDelegate<List<Def>> sFireWords;
+    private static final SparseArrayDelegate<List<Def>> sEarthWords;
+
+    static {
+        sGlodWords = SparseFactory.newSparseArray(8);
+        sWoodWords = SparseFactory.newSparseArray(8);
+        sWaterWords = SparseFactory.newSparseArray(8);
+        sFireWords = SparseFactory.newSparseArray(8);
+        sEarthWords = SparseFactory.newSparseArray(8);
+
+        int bihua = 1;
+        sEarthWords.put(bihua, createWords(bihua, MARK_EARTH, "一乙"));
+
+        bihua ++;
+        sGlodWords.put(bihua, createWords(bihua, MARK_GLOD, "匕刀人入厶"));
+        //sWoodWords.put(bihua, createWords(bihua, MARK_WOOD, "匕刀人入厶"));
+        sWaterWords.put(bihua, createWords(bihua, MARK_WATER, "勹卜乜"));
+        sFireWords.put(bihua, createWords(bihua, MARK_FIRE, "刁丁二力了"));
+        sEarthWords.put(bihua, createWords(bihua, MARK_EARTH, "又"));
+
+        bihua++;
+        sGlodWords.put(bihua, createWords(bihua, MARK_GLOD, "才叉亍川寸千刃三上尸士夕小"));
+        sWoodWords.put(bihua, createWords(bihua, MARK_WOOD, "干工弓丌及孑巾久口廿乞彡已"));
+        sWaterWords.put(bihua, createWords(bihua, MARK_WATER, "凡亡下子"));
+        sFireWords.put(bihua, createWords(bihua, MARK_FIRE, "彳大孓女勺巳乇幺弋丈之"));
+        sEarthWords.put(bihua, createWords(bihua, MARK_EARTH, "己山土丸兀丫也尢于"));
+
+        bihua++;
+        sGlodWords.put(bihua, createWords(bihua, MARK_GLOD, "仇乏戈仁仍冗少升什氏手殳四兮心刈仄爪"));
+        sWoodWords.put(bihua, createWords(bihua, MARK_WOOD, "卞丐公勾介今斤亢孔木牛亓欠犬牙元月匀"));
+        sWaterWords.put(bihua, createWords(bihua, MARK_WATER, "巴比不歹反方分夫父互户化幻毛爿匹片攴壬卅水文毋勿"));
+        sFireWords.put(bihua, createWords(bihua, MARK_FIRE, "尺丑丹吊仃斗火井仂内日太天屯午爻仉支止中"));
+        sEarthWords.put(bihua, createWords(bihua, MARK_EARTH, "厄切王卬夭尹引尤友予曰允"));
+
+        bihua++;
+        sGlodWords.put(bihua, createWords(bihua, MARK_GLOD, "册叱斥出叼刊尻仟且仞申生失石史矢世仕市示甩司玊仙乍占正主"));
+        sWoodWords.put(bihua, createWords(bihua, MARK_WOOD, "本尕甘功古瓜宄卉加甲叫句巨卡可叩卯疒巧丘囚去外未五仡玉札"));
+        sWaterWords.put(bihua, createWords(bihua, MARK_WATER, "半叭白包北必閟弁卟布匆兄弗付夯禾弘乎矛民皿末母仫目丕皮氕平叵仨玄疋印匝"));
+        sFireWords.put(bihua, createWords(bihua, MARK_FIRE, "丙代旦叨氐叮冬叻立尥令另奶尼奴冉他它田仝仗召只左"));
+        sEarthWords.put(bihua, createWords(bihua, MARK_EARTH, "凹瓦戊矽央以永用由右幼孕仔"));
+
+        bihua++;
+        sGlodWords.put(bihua, createWords(bihua, MARK_GLOD, "臣丞舛此次汆存丢而匈吏列任扔如色舌式守妁死寺夙凸刎西吸先囟旬曳再在早吒州舟字"));
+        sWoodWords.put(bihua, createWords(bihua, MARK_WOOD, "朳朵尬各共乩吉伎*幵囝件交臼伉考匡夼企犰曲戎朽旭仰吁聿朱竹"));
+        sWaterWords.put(bihua, createWords(bihua, MARK_WATER, "扒百冰并凼伐刑行凶休帆泛犯仿妃份缶伏亥好合冱回米糸名牟仳牝乒收汀危向血汁"));
+        sFireWords.put(bihua, createWords(bihua, MARK_FIRE, "吃弛打忉氘多耳旮亘光尖匠她决旯老耒劣六甪氖囡年乓全肉同氽佤妄吆宅兆旨至仲自"));
+        sEarthWords.put(bihua, createWords(bihua, MARK_EARTH, "吖安充地戍圪艮圭灰圾岌圮屺似吐圩仵伍戌伢羊伊衣圯夷亦屹因有宇羽圳"));
+
+        bihua++;
+        sGlodWords.put(bihua, createWords(bihua, MARK_GLOD, "扱岔吵车成赤氚串吹忖兑束判七吣忍妊礽删劭卲佘伸身吮私伺佀兕姒宋忒吻伭辛秀序巡酉皂卮吱伫助妆壮孜走佐作坐"));
+        sWoodWords.put(bihua, createWords(bihua, MARK_WOOD, "杓材岑杈床村杜呃杏伽改杆杠告更攻估谷庋呙囯旱何吼肓妓忌夹见角疖劫妗究局姖妜君佧扛壳克扣困伲你杞弃扦羌劬却杉我吴吾扤杌匣吓言吟杖"));
+        sWaterWords.put(bihua, createWords(bihua, MARK_WATER, "伴吧夿弝贝伻皀佊吡妣庇别兵伯孛吥步汊池呆形泛妨彷吠吩佛否呋孚甫汞佝含罕汗亨宏囫弧汲即江戒况冷忙尨每芈妙尿妞伾屁汝汕汜忘尾污汐希孝汛妤妘"));
+        sFireWords.put(bihua, createWords(bihua, MARK_FIRE, "犴呈辵呔甙但低弟佃甸玎疔盯豆妒囤吝伶免旰灸牢玏李里利良吕卵男呐佞弄努求忐忑町廷佟彤吞托佗妥巫妖佁占豸妐住灼姊足"));
+        sEarthWords.put(bihua, createWords(bihua, MARK_EARTH, "坂岙岜坌辰妑坊坩均坎坑牡圻岐岍坍秃完位圬氙岘呀岈延冶矣佚役邑吲甬攸卣佑余欤玙址"));
+
+        //8 9 10
+        bihua++;
+        sGlodWords.put(bihua, createWords(bihua, MARK_GLOD, "侘昌抄弨扯忱承忡初垂佌刺儿姓庚刮戋金净侃刻孥妻戕青取叁刹姗疝尚舍社侁呻使始事受抒叔刷祀忪怂所兔昔穸些刖甾昃怎咋轧姃侄忮周妯咒宙侏抓宗卒"));
+        sWoodWords.put(bihua, createWords(bihua, MARK_WOOD, "板昂枊杯杵东妸扼林杪杷芎枋斧秆杲疙供咕姑孤固呱乖官果杭忽昏肌亟佶技季佳肩艽佼届卺京纠赳玖疚居咀具卷咔咖忾抗肯空快侩狂枚艿呢杻枇其奇歧穹虬屈券枘松枉卧析呷欣厓兖杳宜礿枕枝竺杼"));
+        sWaterWords.put(bihua, createWords(bihua, MARK_WATER, "版扮姅岸八把爸扳攽孢卑屄沘彼畀忭拚汳汴表秉幷帛瓝沉沌幸汹泛房放非氛汾忿奉扶府咐阜侅冈汩卦沆呵劾和佫呼虎或泐盲牦没妹门氓孟汨宓明命殁沫侔姆沐牧忸扭狃抛咆庖呸沛佩帔朋批沏汔汽沁沙沈汰汪味汶沃武物弦冼享协忻沂雨沅咂沚状"));
+        sFireWords.put(bihua, createWords(bihua, MARK_FIRE, "哎佰长炒坼侈炊佽徂耷妲沓岱宕到的狄底玓典店耵定咚侗抖咄剁佴囹昉炅昊戽姐咎抉炕昆剌来佬肋例戾两冽呤坴侣仑旻奈侽呶妮念弩疟妾炔乳侍帑弢忝佻帖投罔昕炎佯易找折争知直制帙炙忠隹卓"));
+        sEarthWords.put(bihua, createWords(bihua, MARK_EARTH, "艾坳垇坻坫爬帕矾附矸岣岵岬坷岢坤垃峁岷坶坭坢坯坪坡坦坨宛往旺委忤岫盱亚奄肴夜依抑佾咏呦侑於盂臾昀狁"));
+
+        bihua++;
+        sGlodWords.put(bihua, createWords(bihua, MARK_GLOD, "臿查姹差拆怊伡疢宬怵穿舡春殂促毒度耏性钆宫剐剞刭俓枯前怯侵秋纫肜柔砂衫舢厍姺哂矧甚牲省施食室是首姝耍帅闩思娀叟俗剃祆籼庠削信星咻庥胥叙宣页钇俞俣哉咱昝蚤则眨咤怔咫峙肘拄拙咨姿俎昨怍"));
+        sWoodWords.put(bihua, createWords(bihua, MARK_WOOD, "柲柄柴柢芏俄柃芇枹尜肝柑竿疳肛缸纥革虼哏狗枸牯故冠咣皈轨癸柜哄訇虹芨咭级急纪既枷叚架建牮姜姣皆界疥蚧矜劲扃九韭拘狙拒军看柯科咳客哐柳咯芒怩昵拈柈芃枰祈芑契恰芊俏俅酋畎芍柿柁柝芄玩侠狎柙相枵俆彦奕弈疫羿胤柚禺竽芋栅柘芝枳柱斫柞"));
+        sWaterWords.put(bihua, createWords(bihua, MARK_WATER, "拌疤拔拜保抱背祊甭泵毖扁窆拚便昪波泊勃哺怖沲法泠沔勉眇秒拍哌沭畈飞沸狒玢风封凫怫拂俘氟罘拊讣负泔沽哈孩河很红泓侯后厚狐怙徊奂宦皇虺哕计沮炬姥泪泖昴冒玫眉美昧虻咪弭泌咩玟抿泯抹哞某拇泥眅泮叛盼狍泡疱怦抨披毗姘品屏泼匍柒泣泅泉染娆泗沱咸香巷泄卸泫泶妍沿衍泱盈泳油沾沼治注"));
+        sFireWords.put(bihua, createWords(bihua, MARK_FIRE, "炳抶抽怛待怠殆眈抵帝酊订段祋盹盾哆哚拎赴拐曷烀咴姞柬炯玦俊拉厘俚俐怜亮咧律哪娜柰耐南怒虐炮炱泰炭畋殄亭突凃拖拓歪纨肟炫紃殃徉咬映昱怨灾炸招昭者贞政祉盅重纣胄炷籽秭耔奏"));
+        sEarthWords.put(bihua, createWords(bihua, MARK_EARTH, "哀垵拗砭垞衩昶垤垌峒肚砘垛垩垡趴怕型垓垢垲砍奎盆砒垧哇娃威韦畏胃瓮屋侮砉峋押砑咽匽怏姚要咿怡咦姨舣姻音垠俑勇幽疣羑囿宥纡舁禹垣爰约窀垚玥"));
+
+        bihua++;
+        sGlodWords.put(bihua, createWords(bihua, MARK_GLOD, "剥财睬仓敇豺刬伥倡鬯晁眧耖唓宸乘蚩持翅刍俶纯祠脆厝凋钉珐刚罡怪借峻钌倪钋剖倩挈邛讱轫衽狨辱弱珊闪讪剡扇哨射珅娠神眚师十时拾狩书纾殊衰拴素祟孙隼唆索恸剜紊唏息席掀宵笑修修訏徐玹痃眩殉栽宰奘唣哳痄窄钊针真畛疹拯症纸指酎疰拽酌租珇祖祚唑座"));
+        sWoodWords.put(bihua, createWords(bihua, MARK_WOOD, "梆桉芭笆柏栢苄栟屙婀苊耙秫芳芬粉芙迀酐绀羔高哥格鬲哿根耕哽肱恭蚣躬拱贡玽股骨罟挂倌桄鬼桂衮核桁讧笏花桓恢唧姬屐笄笈脊记芰珈家痂恝兼豇狡讦拮桀芥衿肼弪径柩桕疽桔矩俱倨娟倦桊隽拷栲珂疴恪倥恐芤哭库框括栝栳栗匿臬芘栖芪耆岂起气虔肷芡衾芩芹祛拳缺桑芟栓凇笋桃桐砼桅芴奚哮校芯栩芽芫唁苡倚痈邕娱圄峪原纭芸笊祗芷桎株桌"));
+        sWaterWords.put(bihua, createWords(bihua, MARK_WATER, "舨氨粑呗班般豹趵倍倴畚秕俾舭毕珌髟俵病玻砵亳庯秤臭泚洞娥洱眠眄俳派肪纺舫肥匪肺纷峰俸服祓蚨俯釜害氦蚶邗函航蚝耗盍狠恨哼恒洪候祜洹洄恚活洎浃津酒洌洛马邙旄们勐洣敉秘珉秣毪亩纽畔袢旁配倗疲蚍拼娉俜洴玶珀哱圃凄讫迄洽洳洒*纱娑洮洼洧纹蚊务洗效胁绁泄屑恤洫恂洵训洋洇耘拶洲洙浊"));
+        sFireWords.put(bihua, createWords(bihua, MARK_FIRE, "哧耻翀娖玳耽疸紞岛倒娣玷爹瓞冻恫蚪趸哦恕耿烘恍晄疾晋珏倔烤朗烙哩娌俩凉料烈玲瓴凌留旅挛伦倮耄拿纳肭衲孬能娘恧衄秦恁朊芮蚋偌晒晌朔趿肽唐倘讨套特疼屉倜恬甜挑条庭挺徒彖庹挖挝倭乌娭夏畜烜讯迅秧烊窈舀旃展站珍朕肢值晊秩致舯衷冢罜祝倬笫恣"));
+        sEarthWords.put(bihua, createWords(bihua, MARK_EARTH, "啊唉埃砹鹌俺按案盎敖芺峬城埕砥峨恩砝砩个埂埚砬埒埋砰破埔砌峭窃容埏砷堍砣娓軎翁唔阢峡轩蚜氩恹胭宴晏氧恙眙酏益殷氤蚓佑迂邘育彧眢员袁砸砟砧肫准"));
+
+        //11- 15
+        //16 - 20
+        //21 - 30
+    }
+
+    private static List<Def> createWords(int bihuaCount, int mark, String words) {
+        List<String> actWords = new ArrayList<>();
+        //only use simple chinese
+        for (char ch : words.toCharArray()){
+            if(PinyinUtils.isSimpleChinese(String.valueOf(ch))){
+                actWords.add(String.valueOf(ch));
+            }
+        }
+        return VisitServices.from(actWords).map(new ResultVisitor<String, Def>() {
+            @Override
+            public Def visit(String s, Object param) {
+                return new Def(bihuaCount, mark, s);
+            }
+        }).getAsList();
+    }
+
+    public static List<Def> getWords(int bihuaCount, int mark){
+        SparseArrayDelegate<List<Def>> sa;
+        if(mark == 0){
+            List<Def> list = new ArrayList<>();
+            list.addAll(sGlodWords.get(bihuaCount));
+            list.addAll(sGlodWords.get(bihuaCount));
+            list.addAll(sGlodWords.get(bihuaCount));
+            list.addAll(sGlodWords.get(bihuaCount));
+            list.addAll(sGlodWords.get(bihuaCount));
+        }
+        //todo
+        return null;
+    }
     /**
      * 中国汉字五行-查询（按笔画）
      *
