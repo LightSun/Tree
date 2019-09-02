@@ -7,7 +7,9 @@ import com.heaven7.java.visitor.ResultVisitor;
 import com.heaven7.java.visitor.collection.VisitServices;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 汉字的五行
@@ -37,8 +39,13 @@ public final class Wuxing {
     private static final SparseArrayDelegate<List<Def>> sWaterWords;
     private static final SparseArrayDelegate<List<Def>> sFireWords;
     private static final SparseArrayDelegate<List<Def>> sEarthWords;
+    private static final Map<Character, Integer> sWuxingMap;
+    private static final Map<Character, Integer> sBihuaMap;
 
     static {
+        sWuxingMap = new HashMap<>();
+        sBihuaMap = new HashMap<>();
+
         sGlodWords = SparseFactory.newSparseArray(8);
         sWoodWords = SparseFactory.newSparseArray(8);
         sWaterWords = SparseFactory.newSparseArray(8);
@@ -247,19 +254,95 @@ public final class Wuxing {
             }
         }).getAsList();
     }
+    public static int getMark(char word){
+        Integer bihua = sWuxingMap.get(word);
+        if(bihua != null){
+            return bihua;
+        }
+        Def def = findWord(sGlodWords, word);
+        if(def == null){
+            def = findWord(sWoodWords, word);
+        }
+        if(def == null){
+            def = findWord(sWaterWords, word);
+        }
+        if(def == null){
+            def = findWord(sFireWords, word);
+        }
+        if(def == null){
+            def = findWord(sEarthWords, word);
+        }
+        bihua = def != null ? def.mark : -1;
+        sWuxingMap.put(word, bihua);
+        return bihua;
+    }
+    public static int getBihua(char word){
+        Integer bihua = sWuxingMap.get(word);
+        if(bihua != null){
+            return bihua;
+        }
+        Def def = findWord(sGlodWords, word);
+        if(def == null){
+            def = findWord(sWoodWords, word);
+        }
+        if(def == null){
+            def = findWord(sWaterWords, word);
+        }
+        if(def == null){
+            def = findWord(sFireWords, word);
+        }
+        if(def == null){
+            def = findWord(sEarthWords, word);
+        }
+        bihua = def != null ? def.bihuaCount : -1;
+        sWuxingMap.put(word, bihua);
+        return bihua;
+    }
+
+    private static Def findWord(SparseArrayDelegate<List<Def>> sa,char word) {
+        int size = sa.size();
+        for (int i = 0 ; i < size ; i ++){
+            for (Def def : sa.valueAt(i)){
+                if(def.word.charAt(0) == word){
+                    return def;
+                }
+            }
+        }
+        return null;
+    }
 
     public static List<Def> getWords(int bihuaCount, int mark){
-        SparseArrayDelegate<List<Def>> sa;
         if(mark == 0){
             List<Def> list = new ArrayList<>();
             list.addAll(sGlodWords.get(bihuaCount));
-            list.addAll(sGlodWords.get(bihuaCount));
-            list.addAll(sGlodWords.get(bihuaCount));
-            list.addAll(sGlodWords.get(bihuaCount));
-            list.addAll(sGlodWords.get(bihuaCount));
+            list.addAll(sWoodWords.get(bihuaCount));
+            list.addAll(sWaterWords.get(bihuaCount));
+            list.addAll(sFireWords.get(bihuaCount));
+            list.addAll(sEarthWords.get(bihuaCount));
+            return list;
+        }else {
+            List<Def> list;
+            switch (mark){
+                case MARK_GLOD:
+                    list = sGlodWords.get(bihuaCount);
+                    break;
+                case MARK_WOOD:
+                    list = sWoodWords.get(bihuaCount);
+                    break;
+                case MARK_WATER:
+                    list = sWaterWords.get(bihuaCount);
+                    break;
+                case MARK_FIRE:
+                    list = sFireWords.get(bihuaCount);
+                    break;
+                case MARK_EARTH:
+                    list = sEarthWords.get(bihuaCount);
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+            return  list;
         }
-        //todo
-        return null;
     }
     /*
      * 中国汉字五行-查询（按笔画）
